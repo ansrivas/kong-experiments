@@ -1,0 +1,32 @@
+version: '3'
+services:
+  flask-web:
+    build: .
+    network_mode: host
+
+  kong-database:
+    image: postgres:9.6
+    network_mode: host
+    environment:
+      - POSTGRES_USER=kong
+      - POSTGRES_DB=kong
+  kong-bootstrap:
+    image: kong:latest
+    network_mode: host
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=0.0.0.0
+    command: sh -c "sleep 10 && kong migrations bootstrap"
+
+  kong:
+    image: kong:latest
+    network_mode: host
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=0.0.0.0
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+    command: sh -c "sleep 15 && kong start"
